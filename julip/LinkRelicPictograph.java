@@ -15,7 +15,6 @@ import javax.swing.event.*;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.highgui.HighGui;
@@ -319,15 +318,11 @@ public class LinkRelicPictograph extends LinkClass {
     @Override
     public List<String> genImportList() {
         List<String> importsL = new ArrayList<String>();
+        importsL.add("java.util.Collections");
         importsL.add("java.util.List");
         importsL.add("org.opencv.core.Core");
         importsL.add("org.opencv.core.CvType");
-        importsL.add("org.opencv.core.Mat");
-        importsL.add("org.opencv.core.MatOfPoint");
-        importsL.add("org.opencv.core.MatOfPoint2");
         importsL.add("org.opencv.core.Point");
-        importsL.add("org.opencv.core.Scalar");
-        importsL.add("org.opencv.imgproc.Imgproc");
         return importsL;
     }     
     
@@ -343,7 +338,7 @@ public class LinkRelicPictograph extends LinkClass {
             sb.append("(List<Point> points) {\n");
             
             sb.append("        int pictographID = 0;\n");
-            sb.append("        xlist = new ArrayList<>();\n");
+            sb.append("        List<double> xlist = new ArrayList<>();\n");
             sb.append("        double sumx = 0;\n");
             sb.append("        for (int i = 0; i < points.size(); i++) {\n");
             sb.append("            double x = points.get(i).x;\n");

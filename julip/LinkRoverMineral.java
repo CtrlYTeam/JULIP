@@ -19,6 +19,7 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
@@ -71,7 +72,10 @@ public class LinkRoverMineral extends LinkClass {
         // Load input file - could be an image, a Julip file of contours
         //                   or points, or a user-customized file.
         //
-        buildContours(myLinkMap.get("IMAGE_IN"));
+        matImgSrc = Mat.zeros(new Size(512, 512), CvType.CV_8U);
+        if (buildContours(myLinkMap.get("IMAGE_IN")) == false) {
+            contours = new ArrayList<>();
+        };
         //
         // Error-check and correct invalid settings.
         //
@@ -251,63 +255,61 @@ public class LinkRoverMineral extends LinkClass {
         Scalar yellowColor = new Scalar(0,255,255);    
         Scalar greenColor  = new Scalar(0,255,0);
         Scalar redColor    = new Scalar(0,0,255);
-        
-        MatOfPoint2f contourMat = new MatOfPoint2f(contours.get(0).toArray());
-        Point circleCenter = new Point();
-        float[] circleRadii = new float[1];
-        Imgproc.minEnclosingCircle(contourMat, circleCenter, circleRadii);
-                    
-        Imgproc.circle(
-            matImgDst,           // Mat img
-            circleCenter,        // Point center
-            2,                   // int radius
-            redColor,          // Scalar color
-            3                    // int thickness
-        );                    
-        
-        
-        double x1 = matImgDst.cols()/3.0;
-        double x2 = 2.0 * x1;
-        double y1 = 0.0;
-        double y2 = (double)matImgDst.rows();
-        
-        // Vertical line delineating Left and Center boundary
-        Imgproc.line(
-            matImgDst,        // Mat: image
-            new Point(x1,y1), // Point: endpoint of Line
-            new Point(x1,y2), // Point: endpoint of Line
-            greenColor        // Scalar: color
-        );
-        // Vertical line delineating Center and Right boundary
-        Imgproc.line(
-            matImgDst,        // Mat: image
-            new Point(x2,y1), // Point: endpoint of Line
-            new Point(x2,y2), // Point: endpoint of Line
-            greenColor        // Scalar: color
-        );
-        
-        Imgproc.drawContours(
-            matImgDst,          // input/output mat image
-            contours,           // input List of Mats of contours
-            -1,                  // index into List of Mats of contours
-            yellowColor,        // Scalar color of drawn contour
-            2,                  // pixel thickness of drawn contour
-            Imgproc.LINE_8      // LineType of drawn contour
-        );  
-        
-        
         mineralIndex = 0;
         
-        if (circleCenter.x < x1) {
-            mineralIndex = 1;
-        }
-        else if (circleCenter.x > x2/3) {
-            mineralIndex = 3;
-        }
-        else
-            mineralIndex = 2;
+        if (contours.size() > 0) {
+            MatOfPoint2f contourMat = new MatOfPoint2f(contours.get(0).toArray());
+            Point circleCenter = new Point();
+            float[] circleRadii = new float[1];
+            Imgproc.minEnclosingCircle(contourMat, circleCenter, circleRadii);
+                    
+            Imgproc.circle(
+                matImgDst,           // Mat img
+                circleCenter,        // Point center
+                2,                   // int radius
+                redColor,          // Scalar color
+                3                    // int thickness
+            );                    
+                
+            double x1 = matImgDst.cols()/3.0;
+            double x2 = 2.0 * x1;
+            double y1 = 0.0;
+            double y2 = (double)matImgDst.rows();
         
-        labelImageIs.setText("\nMineral is "+MINERAL_STR[mineralIndex] + "  ("+mineralIndex+")\n");
+            // Vertical line delineating Left and Center boundary
+            Imgproc.line(
+                matImgDst,        // Mat: image
+                new Point(x1,y1), // Point: endpoint of Line
+                new Point(x1,y2), // Point: endpoint of Line
+                greenColor        // Scalar: color
+            );
+            // Vertical line delineating Center and Right boundary
+            Imgproc.line(
+                matImgDst,        // Mat: image
+                new Point(x2,y1), // Point: endpoint of Line
+                new Point(x2,y2), // Point: endpoint of Line
+                greenColor        // Scalar: color
+            );
+        
+            Imgproc.drawContours(
+                matImgDst,          // input/output mat image
+                contours,           // input List of Mats of contours
+                -1,                  // index into List of Mats of contours
+                yellowColor,        // Scalar color of drawn contour
+                2,                  // pixel thickness of drawn contour
+                Imgproc.LINE_8      // LineType of drawn contour
+            );  
+                                    
+            if (circleCenter.x < x1) {
+                mineralIndex = 1;
+            }
+            else if (circleCenter.x > x2/3) {
+                mineralIndex = 3;
+            }
+            else
+                mineralIndex = 2;
+        }
+        labelImageIs.setText("\nMineral is "+MINERAL_STR[mineralIndex] + "  ("+mineralIndex+")\n");        
         
         Image img = HighGui.toBufferedImage(matImgDst);
         imgLabel.setIcon(new ImageIcon(img));        
@@ -341,6 +343,9 @@ public class LinkRoverMineral extends LinkClass {
             if (!reference.equals("")) { sb.append("_"+reference); }
             sb.append("(List<MatOfPoint> contours, Mat image) {\n");
             
+            sb.append("        if (contours.size() == 0) {\n");
+            sb.append("            return 0;\n");
+            sb.append("        }\n");
             sb.append("        // Get center of Bounding Circle\n");
             sb.append("        MatOfPoint2f contourMat = new MatOfPoint2f(contours.get(0).toArray());\n");
             sb.append("        Point circleCenter = new Point();\n");

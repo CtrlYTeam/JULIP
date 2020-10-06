@@ -513,7 +513,7 @@ public class JoinRelicJewel extends LinkClass {
             sb.append("            // Red Jewel is RIGHT Blue Jewel is LEFT\n");
             sb.append("            return 2;\n");
             sb.append("        }\n");
-            sb.append("        // ACK! Jewels are horizantally aligned onto each other\n");
+            sb.append("        // ACK! Jewels are horizontally aligned onto each other\n");
             sb.append("        return 0;\n");
             sb.append("    }\n");
         return sb.toString();

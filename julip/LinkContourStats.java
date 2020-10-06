@@ -97,7 +97,6 @@ public class LinkContourStats extends LinkClass {
         // Initialize fields:
         //
         anchor = new Point(-1,-1);
-        contours = new ArrayList<>();  
         circleCenters = new ArrayList<>();
         circleRadii   = new ArrayList<>();
         drawnContourIndices = new ArrayList<>();        
@@ -121,7 +120,10 @@ public class LinkContourStats extends LinkClass {
         // Load input file - could be an image, a Julip file of contours
         //                   or points, or a user-customized file.
         //
-        buildContours(myLinkMap.get("IMAGE_IN"));
+        matImgSrc = Mat.zeros(new Size(512, 512), CvType.CV_8U);
+        if (buildContours(myLinkMap.get("IMAGE_IN")) == false) {
+            contours = new ArrayList<>();
+        };
         //
         // Error-check and correct invalid settings.
         //
@@ -460,6 +462,7 @@ public class LinkContourStats extends LinkClass {
         importsL.add("java.util.List");
         importsL.add("org.opencv.core.MatOfPoint");
         importsL.add("org.opencv.core.MatOfPoint2");
+        importsL.add("org.opencv.core.Point");
         importsL.add("org.opencv.imgproc.Imgproc");
         return importsL;
     }     
@@ -487,6 +490,7 @@ public class LinkContourStats extends LinkClass {
             sb.append("                radius     // float[]      - output radius\n");
             sb.append("            );\n");
             sb.append("            circleCenters.add(center);\n");
+            sb.append("        }\n");
             sb.append("        return circleCenters;\n");
             sb.append("    }\n");
         return sb.toString();

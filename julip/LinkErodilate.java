@@ -48,6 +48,15 @@ public class LinkErodilate extends LinkClass {
         Imgproc.MORPH_TOPHAT, 
         Imgproc.MORPH_BLACKHAT 
     };
+    private final String[] MORPH_TYPE_NAME = { 
+        "Imgproc.MORPH_ERODE",
+        "Imgproc.MORPH_DILATE",
+        "Imgproc.MORPH_OPEN", 
+        "Imgproc.MORPH_CLOSE",
+        "Imgproc.MORPH_GRADIENT", 
+        "Imgproc.MORPH_TOPHAT", 
+        "Imgproc.MORPH_BLACKHAT" 
+    };
     
     private final String[] KERNEL_STR = { 
         "Kernel:Rectangle", 
@@ -58,6 +67,11 @@ public class LinkErodilate extends LinkClass {
         Imgproc.CV_SHAPE_RECT,
         Imgproc.CV_SHAPE_CROSS,
         Imgproc.CV_SHAPE_ELLIPSE
+    };
+    private final String[] KERNEL_TYPE_NAME = {
+        "Imgproc.CV_SHAPE_RECT",
+        "Imgproc.CV_SHAPE_CROSS",
+        "Imgproc.CV_SHAPE_ELLIPSE"
     };
     
     private final String[] IMAGE_STR = { 
@@ -337,14 +351,14 @@ public class LinkErodilate extends LinkClass {
             sb.append("            "+(2 * kernelTB.value + 1)+", // double - height\n");
             sb.append("        );\n");
             sb.append("        Mat element = Imgproc.getStructuringElement(\n");
-            sb.append("            "+KERNEL_TYPE[kernelCB.index]+",    // int  - shape\n");
-            sb.append("            kernelSize,                   // Size - ksize\n");
+            sb.append("            "+KERNEL_TYPE_NAME[kernelCB.index]+",    // int  - shape\n");
+            sb.append("            kernelSize,             // Size - ksize\n");
             sb.append("        );\n");
             sb.append("        // Execute morphologyEx operation\n");
             sb.append("        Imgproc.morphologyEx(\n");
             sb.append("            matImgSrc,    // Mat - source\n");
             sb.append("            matImgDst,    // Mat - destination\n");
-            sb.append("            "+MORPH_TYPE[morphCB.index]+",    // int - operation\n");
+            sb.append("            "+MORPH_TYPE_NAME[morphCB.index]+",    // int - operation\n");
             sb.append("            element       // Mat - kernel\n");
             sb.append("        );\n");
             sb.append("        return matImgDst;\n");

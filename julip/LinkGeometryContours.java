@@ -76,7 +76,6 @@ public class LinkGeometryContours extends LinkClass {
         // Initialize fields:
         //
         anchor = new Point(-1,-1);
-        contours = new ArrayList<>();    
         contourPcts = new ArrayList<>();
         drawnContourIndices = new ArrayList<>();
         textWidth = 15;
@@ -98,7 +97,10 @@ public class LinkGeometryContours extends LinkClass {
         // Load input file - could be an image, a Julip file of contours
         //                   or points, or a user-customized file.
         //
-        buildContours(myLinkMap.get("IMAGE_IN"));
+        matImgSrc = Mat.zeros(new Size(512, 512), CvType.CV_8U);
+        if (buildContours(myLinkMap.get("IMAGE_IN")) == false) {
+            contours = new ArrayList<>();
+        };
         //
         // Error-check and correct invalid settings.
         //

@@ -325,23 +325,30 @@ public class LinkInRangeHSV extends LinkClass {
         Mat msk = new Mat();
         //matImgDst = new Mat();
         matImgDst = Mat.zeros(matImgSrc.rows(), matImgSrc.cols(), CvType.CV_8U);
-        // Convert the file source image from BGR to HSV
-        Imgproc.cvtColor(matImgSrc, src, Imgproc.COLOR_BGR2HSV);
+        // If a 3-channel Mat is showing, then process the image
+        if (matImgSrc.channels() == 3) {
+            // Convert the file source image from BGR to HSV
+            Imgproc.cvtColor(matImgSrc, src, Imgproc.COLOR_BGR2HSV);
 
-        // Create a mask from the min/max settings of HSV
-        Core.inRange(src, new Scalar (hueMinTB.value, satMinTB.value, valMinTB.value),
-                          new Scalar (hueMaxTB.value, satMaxTB.value, valMaxTB.value), msk);
-        // Need to fill size the destination Mat before using the
-        // copyTo with mask argument, otherwise the mask won't apply.
-        dst = Mat.zeros(matImgSrc.rows(), matImgSrc.cols(), CvType.CV_8U);
-        // All color values in msk Mat = 0 will set the corresponding color value
-        // in the destination Mat to 0. All non-zero color values in the msk Mat
-        // will copy the source color value to the destination color value.
-        Core.copyTo(matImgSrc,dst,msk);        
-        if (imageCB.index == 0) {
-            dst.copyTo(matImgDst);
-        } else {
-            msk.copyTo(matImgDst);
+            // Create a mask from the min/max settings of HSV
+            Core.inRange(src, new Scalar (hueMinTB.value, satMinTB.value, valMinTB.value),
+                              new Scalar (hueMaxTB.value, satMaxTB.value, valMaxTB.value), msk);
+            // Need to fill size the destination Mat before using the
+            // copyTo with mask argument, otherwise the mask won't apply.
+            dst = Mat.zeros(matImgSrc.rows(), matImgSrc.cols(), CvType.CV_8U);
+            // All color values in msk Mat = 0 will set the corresponding color value
+            // in the destination Mat to 0. All non-zero color values in the msk Mat
+            // will copy the source color value to the destination color value.
+            Core.copyTo(matImgSrc,dst,msk);        
+            if (imageCB.index == 0) {
+                dst.copyTo(matImgDst);
+            } else {
+                msk.copyTo(matImgDst);
+            }
+        }
+        // If a 1-channel Mat is showing (like 'none') then don't process it
+        else {
+            matImgSrc.copyTo(matImgDst);
         }
         Image img = HighGui.toBufferedImage(matImgDst);
         imgLabel.setIcon(new ImageIcon(img));
@@ -378,8 +385,6 @@ public class LinkInRangeHSV extends LinkClass {
             
             sb.append("        Mat src = new Mat();\n");
             sb.append("        Mat msk = new Mat();\n");
-            sb.append("        Scalar lowerb;\n");
-            sb.append("        Scalar upperb;\n");
             sb.append("        // Initialize output Mat to all zeros; and to same Size as input Mat\n");
             sb.append("        Mat matImgDst = Mat.zeros(\n");
             sb.append("            matImgSrc.rows(), // int - number of rows\n");
@@ -393,8 +398,8 @@ public class LinkInRangeHSV extends LinkClass {
             sb.append("            Imgproc.COLOR_BGR2HSV  // int - code space conversion code\n");
             sb.append("        );\n");
             sb.append("        // Create masking Mat msk of all pixels within Scalar boundaries\n");
-            sb.append("        lowerb = new Scalar ("+hueMinTB.value+", "+satMinTB.value+", "+valMinTB.value+");\n");
-            sb.append("        upperb = new Scalar ("+hueMaxTB.value+", "+satMaxTB.value+", "+valMaxTB.value+");\n");
+            sb.append("        Scalar lowerb = new Scalar ("+hueMinTB.value+", "+satMinTB.value+", "+valMinTB.value+");\n");
+            sb.append("        Scalar upperb = new Scalar ("+hueMaxTB.value+", "+satMaxTB.value+", "+valMaxTB.value+");\n");
             sb.append("        Core.inRange(\n");
             sb.append("            src,       // Mat    - input Mat\n");
             sb.append("            lowerb,    // Scalar - inclusive lower boundary scalar\n");

@@ -47,6 +47,13 @@ public class LinkFindContours extends LinkClass {
         Imgproc.RETR_CCOMP
         //Imgproc.RETR_FLOODFILL
     };
+    private static final String[] MODE_CONST_NAME = {
+        "Imgproc.RETR_TREE",
+        "Imgproc.RETR_EXTERNAL",
+        "Imgproc.RETR_LIST",
+        "Imgproc.RETR_CCOMP"
+        //Imgproc.RETR_FLOODFILL
+    };
     
     private static final String[] METHOD_STR = {
         "Chain_Approx_Simple",
@@ -59,6 +66,12 @@ public class LinkFindContours extends LinkClass {
         Imgproc.CHAIN_APPROX_NONE,
         Imgproc.CHAIN_APPROX_TC89_KCOS,
         Imgproc.CHAIN_APPROX_TC89_L1        
+    };
+    private static final String[] METHOD_CONST_NAME = {
+        "Imgproc.CHAIN_APPROX_SIMPLE",
+        "Imgproc.CHAIN_APPROX_NONE",
+        "Imgproc.CHAIN_APPROX_TC89_KCOS",
+        "Imgproc.CHAIN_APPROX_TC89_L1"
     };
 
     private JulipComboBox modeCB;
@@ -263,7 +276,10 @@ public class LinkFindContours extends LinkClass {
      */
     public void refreshImage() {
         Mat gray = new Mat();        
-        Imgproc.cvtColor(matImgSrc, gray, Imgproc.COLOR_BGR2GRAY);
+        // If source is a color Mat, 3-channel, then convert it to grayscale, 1-channel
+        if (matImgSrc.channels() == 3) {        
+            Imgproc.cvtColor(matImgSrc, gray, Imgproc.COLOR_BGR2GRAY);
+        }
 
         contours.clear();
         Mat hierarchy = new Mat();
@@ -334,8 +350,8 @@ public class LinkFindContours extends LinkClass {
             sb.append("            gray,         // Mat - input image\n");
             sb.append("            contours,     // List of MatOfPoints - output List of contours\n");
             sb.append("            hierarchy,    // Mat - output hierarchy Mat\n");
-            sb.append("            "+MODE_CONST[modeCB.index]+",    // int - contour retrieval mode\n");
-            sb.append("            "+METHOD_CONST[methodCB.index]+"    // int - contour approximation method\n");
+            sb.append("            "+MODE_CONST_NAME[modeCB.index]+",    // int - contour retrieval mode\n");
+            sb.append("            "+METHOD_CONST_NAME[methodCB.index]+"    // int - contour approximation method\n");
             sb.append("        );\n");
             sb.append("        return filteredContours;\n");
             sb.append("    }\n");

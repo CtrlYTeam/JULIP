@@ -81,7 +81,6 @@ public class LinkFilterContours extends LinkClass {
         // Initialize fields:
         //
         anchor = new Point(-1,-1);
-        contours = new ArrayList<>();    
         contourAreas = new ArrayList<>();
         contourPerimeters = new ArrayList<>();
         drawnContourIndices = new ArrayList<>();
@@ -104,7 +103,10 @@ public class LinkFilterContours extends LinkClass {
         // Load input file - could be an image, a Julip file of contours
         //                   or points, or a user-customized file.
         //
-        buildContours(myLinkMap.get("IMAGE_IN"));
+        matImgSrc = Mat.zeros(new Size(512, 512), CvType.CV_8U);
+        if (buildContours(myLinkMap.get("IMAGE_IN")) == false) {
+            contours = new ArrayList<>();
+        };
         //
         // Error-check and correct invalid settings.
         //
@@ -570,23 +572,25 @@ public class LinkFilterContours extends LinkClass {
             sb.append("        double perimeter;\n");
             sb.append("        MatOfPoint2f contour2f;\n");
             sb.append("        for (int i = 0; i < contours.size(); i++) {\n");
+            sb.append("            // calculate area and perimeter of each contour\n");
             sb.append("            area = Imgproc.contourArea(contours.get(i),false);\n");
             sb.append("            contour2f = new MatOfPoint2f(contours.get(i).toArray());\n");
             sb.append("            perimeter = Imgproc.arcLength(contour2f,true);\n");
-            sb.append("        }\n");
-            sb.append("        if (( area > "+minArea+" ) &&\n");
+            sb.append("            // only add contours within desired area and perimeter to list of filtered contours\n");
+            sb.append("            if (( area > "+minArea+" ) &&\n");
             if (maxArea < 0) {
-                sb.append("            (area < Double.POSITIVE_INFINITY) &&\n");
+                sb.append("                (area < Double.POSITIVE_INFINITY) &&\n");
             } else {
-                sb.append("            (area < "+maxArea+") &&\n");
+                sb.append("                (area < "+maxArea+") &&\n");
             }
-            sb.append("            ( perimeter > "+minPerimeter+") &&\n");
+            sb.append("                ( perimeter > "+minPerimeter+") &&\n");
             if (maxPerimeter < 0) {
-                sb.append("            (perimeter < Double.POSITIVE_INFINITY)) {\n");
+                sb.append("                (perimeter < Double.POSITIVE_INFINITY)) {\n");
             } else {
-                sb.append("            (perimeter < "+maxPerimeter+")) {\n");
+                sb.append("                (perimeter < "+maxPerimeter+")) {\n");
             }
-            sb.append("            filteredContours.add(contours.get(i));\n");
+            sb.append("                filteredContours.add(contours.get(i));\n");
+            sb.append("            }\n");
             sb.append("        }\n");
             sb.append("        return filteredContours;\n");
             sb.append("    }\n");
