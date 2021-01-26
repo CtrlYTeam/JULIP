@@ -40,6 +40,7 @@ public class ChainGui {
                 "LinkFindContours     img>ctr",
                 "LinkFilterContours   ctr>ctr",
                 "LinkGeometryContours ctr>ctr",
+                "LinkPolygons         ctr>ctr",                
                 "LinkContourStats     ctr>pts",
                 "JoinRelicJewel       ctr>nil",
                 "LinkRelicPictograph  pts>nil",
@@ -1206,6 +1207,9 @@ public class ChainGui {
                 else if (guiName.equals("LinkGeometryContours")) {
                     gui = new LinkGeometryContours(args);
                 }
+                else if (guiName.equals("LinkPolygons")) {
+                    gui = new LinkPolygons(args);
+                }                
                 else if (guiName.equals("LinkContourStats")) {
                     gui = new LinkContourStats(args);
                 }
