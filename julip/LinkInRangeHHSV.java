@@ -438,6 +438,8 @@ public class LinkInRangeHHSV extends LinkClass {
             sb.append("            matImgSrc.cols(), // int - number of columns\n");
             sb.append("            CvType.CV_8U      // int - Mat data type\n");
             sb.append("        );\n");
+            sb.append("        // If the source image was a file then the Mat is BGR (as this code assumes)\n");
+            sb.append("        // BUT if the source image was a camera then the Mat is likely RGB, so instead use COLOR_RGB2HSV\n");
             sb.append("        // Convert source Mat in BGR color space to HSV color space\n");
             sb.append("        Imgproc.cvtColor(\n");
             sb.append("            matImgSrc,             // Mat - source\n");

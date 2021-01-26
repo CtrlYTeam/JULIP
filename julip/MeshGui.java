@@ -58,6 +58,7 @@ public class MeshGui {
     private JButton terminusB;
     private JButton killB;
     private JButton verifyB;
+    private JButton exportCodeB;
     
     private JFrame frame;
     private JPanel myPanel;
@@ -71,8 +72,36 @@ public class MeshGui {
     private final int NOWIDTH  = 420;
     private final int NOHEIGHT = 420;
     
-    
-    
+    // Methods within MeshGui
+    //
+    //  MeshGui() - MeshGui constructor
+    //      
+    //  validateFork()
+    //  validateJoin()
+    //  validateChain()
+    //  validateTerminus()
+    //  validateKill()
+    //  validateVerify()
+    //
+    //  createFork()
+    //  createJoin()
+    //  createJoinRef()
+    //  createChain()
+    //  createTerminus()
+    //  createKill()
+    //  createVerify()
+    //
+    //  resizeFrame()       - utility method to resize this window
+    //  populateNodeTable() - update node JTable from MyMesh
+    //  getImage()          - method to load image from ChainGui frame
+    //  parseArgs()         - Parse the command line arguments
+    //  getMesh()           - parse mesh file
+    //  updateRef()         - update link settings file names based on an update of the chain reference
+    //  updateGuis()        - instantiate guis from chain nodes in myMesh
+    //  saveSettings()      - write chain gui settings to file
+    //  exportCode()        - write code to file from all chains and links within this mesh
+    //  main()              - method to allow command line application lauch
+     
     /**
      *  MeshGui constructor 
      *  @param args - List of command line arguments
@@ -406,35 +435,42 @@ public class MeshGui {
         //------------------------------------- chainControlPanel -------------------------
         //
         // JPanel with Flow Layout
-        //   JButton - to do stuff
+        //   JButton - to bring up all the chains and links in the mesh
         //   JButton - to save chainlink file
         //   JTextField - chainlink filename holder
+        //   JButton - export code
         JPanel chainControlPanel = new JPanel();
         JButton updateB = new JButton("Update Gui's");
+        JButton saveSettingsB = new JButton("Save Settings>");
+        fileMeshTF = new JTextField();
+        exportCodeB = new JButton("Export Code");
+
         updateB.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (updateGuis()) {
                     updateB.setBackground(null);
+                    exportCodeB.setBackground(Color.GREEN);
                 } else {
                     System.out.println("No image selected in Image Table to update Guis.");
                     updateB.setBackground(Color.RED);
                 }
             }
         });        
-        JButton saveSettingsB = new JButton("Save Settings>");
+
         saveSettingsB.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 saveSettings();
             }
         });
-        fileMeshTF = new JTextField();
+        
         fileMeshTF.setPreferredSize(new Dimension(120, 25));
         if (myMeshMap.containsKey("MESH_FILE")) {
             fileMeshTF.setText(myMeshMap.get("MESH_FILE"));
         }
-        JButton exportCodeB = new JButton("Export Code");
+
+        exportCodeB.setBackground(Color.YELLOW);
         exportCodeB.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -1631,19 +1667,29 @@ public class MeshGui {
      * exportCode - write code to file from all chains and links within this mesh
      */
     public void exportCode() {
-        String linkfilename  = "codeMesh.java";
+        String linkfilename  = "code_Mesh_"+refMeshTF.getText()+".java";
         List<String> importMeshList = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
         BufferedWriter writer;
+        
+        // Bail out if there are no chainGuis
+        if (chainGuis.size() == 0) {
+            exportCodeB.setBackground(Color.RED);
+            System.out.println("No chains: press 'Update Gui's' button");
+            return;
+        }
 
         try {
             writer = new BufferedWriter(new FileWriter(linkfilename));
             
+            // iterate through all the chains within the mesh...
             for (int i = 0; i < chainGuis.size(); i++) {          
                 ChainGui chainGui = chainGuis.get(i);
                 Node node = myMesh.nodes.get(chainNode.get(i));
                 
-                // append new import statements to this list of import statements
+                //
+                // append each new import statement from a given chain to this mesh's list of import statements
+                //
                 List<String> importChainList = chainGui.genImportList();
                 if (importChainList != null) {
                     for (String importStr : importChainList) {   
@@ -1656,10 +1702,13 @@ public class MeshGui {
                     System.out.println("WHOA, null import list returned from chain:"+node.inputRefs.get(node.inputs.get(0)));
                 }
                 
-                // get and append Link's generated code to chain's code
+                //
+                // get and append all the Link's generated code from given chain to this mesh's code
+                //
                 sb.append(chainGui.genCodeString());
             }
-                
+             
+            // print the list of import statements to file 
             if (importMeshList.size() > 0) {
                 writer.write("//requires:\n");
                 Collections.sort(importMeshList);
@@ -1668,6 +1717,7 @@ public class MeshGui {
                 writer.write("//import "+importMeshList.get(i)+";\n");
             }            
             
+            // print the accumulated generated code to file
             writer.write(sb.toString());
             writer.close();
         } catch (IOException e) {}    

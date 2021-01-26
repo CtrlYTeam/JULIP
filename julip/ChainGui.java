@@ -1365,7 +1365,7 @@ public class ChainGui {
      * exportCode - write prototype code from entire chain to file
      */
     public void exportCode() {
-        String linkfilename  = "codeChain.java";
+        String linkfilename  = "code_Chain_"+chainLinkTF.getText()+".java";
         List<String> importList = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
         BufferedWriter writer;
