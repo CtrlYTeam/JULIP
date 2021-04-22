@@ -81,6 +81,8 @@ public class LinkFindContours extends LinkClass {
     private final int methodIdxDefault = 0;
     
     private JLabel labelContours;
+    private JScrollPane imgSP;              // JScrollPane to hold image
+    private int frameHeightMinusImage = 0;
         
     private Point anchor;    
     private List<MatOfPoint> contours;
@@ -127,7 +129,9 @@ public class LinkFindContours extends LinkClass {
         // All frames have a display image
         //
         Image img = HighGui.toBufferedImage(matImgSrc);
-        imgLabel = new JLabel(new ImageIcon(img));        
+        imgLabel = new JLabel(new ImageIcon(img));  
+        imgSP = new JScrollPane(imgLabel);
+        imgSP.setPreferredSize(new Dimension(400,400));                
         //
         //----------------------------------------------
         //
@@ -160,7 +164,14 @@ public class LinkFindContours extends LinkClass {
         
         // Build frame; the imgLabel is required to be added somewhere to the frame
         frame.add(sliderPanel, BorderLayout.PAGE_START);
-        frame.add(imgLabel, BorderLayout.CENTER);
+        frame.add(imgSP, BorderLayout.CENTER);
+        
+        frame.addComponentListener(new ComponentAdapter() {
+            public void componentResized(ComponentEvent componentEvent) {
+                Dimension sizeSP = imgSP.getSize();
+                imgSP.setPreferredSize(new Dimension(sizeSP.width, frame.getSize().height - frameHeightMinusImage));
+            }
+        });
         
         //
         //----------------------------------------------
@@ -168,6 +179,7 @@ public class LinkFindContours extends LinkClass {
         // These final commands are required for all Link Gui's
         //
         frame.pack();
+        frameHeightMinusImage = frame.getSize().height - imgSP.getSize().height;             
         frame.setVisible(true);
         refreshSettings();
         refreshImage();

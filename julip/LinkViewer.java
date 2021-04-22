@@ -15,6 +15,7 @@ import javax.swing.event.*;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.highgui.HighGui;
@@ -22,81 +23,37 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 /**
- * LinkErodilate - Graphical user interface to exercise openCV Imgproc.mophologyEx method.
+ * LinkErodilate - Graphical user interface to view pixel values.
  */
-public class LinkErodilate extends LinkClass {
+public class LinkViewer extends LinkClass {
 
     //------------------------------------------------
     // All fields here are specific to this Link Gui.
     // All fields are either final or not initialized.
     //
-    private final String[] MORPH_STR = {
-        "Operation:Erosion",
-        "Operation:Dilation",
-        "Operation:Opening",
-        "Operation:Closing",
-        "Operation:Gradient",
-        "Operation:Top_Hat",
-        "Operation:Black_Hat"
+    private final String[] COLORSPACE_STR = { 
+        "BGR", 
+        "HSV"         
     };
-    private final int[] MORPH_TYPE = { 
-        Imgproc.MORPH_ERODE,
-        Imgproc.MORPH_DILATE,
-        Imgproc.MORPH_OPEN, 
-        Imgproc.MORPH_CLOSE,
-        Imgproc.MORPH_GRADIENT, 
-        Imgproc.MORPH_TOPHAT, 
-        Imgproc.MORPH_BLACKHAT 
-    };
-    private final String[] MORPH_TYPE_NAME = { 
-        "Imgproc.MORPH_ERODE",
-        "Imgproc.MORPH_DILATE",
-        "Imgproc.MORPH_OPEN", 
-        "Imgproc.MORPH_CLOSE",
-        "Imgproc.MORPH_GRADIENT", 
-        "Imgproc.MORPH_TOPHAT", 
-        "Imgproc.MORPH_BLACKHAT" 
-    };
+       
+    private JLabel[][] pixelValueLabels;
     
-    private final String[] KERNEL_STR = { 
-        "Kernel:Rectangle", 
-        "Kernel:Cross", 
-        "Kernel:Ellipse" 
-    };
-    private final int[] KERNEL_TYPE = {
-        Imgproc.CV_SHAPE_RECT,
-        Imgproc.CV_SHAPE_CROSS,
-        Imgproc.CV_SHAPE_ELLIPSE
-    };
-    private final String[] KERNEL_TYPE_NAME = {
-        "Imgproc.CV_SHAPE_RECT",
-        "Imgproc.CV_SHAPE_CROSS",
-        "Imgproc.CV_SHAPE_ELLIPSE"
-    };
+    private JulipTrackBar xpixelTB;
+    private JulipTrackBar ypixelTB;
+    private JulipComboBox colorSpaceCB;
     
-    private final String[] IMAGE_STR = { 
-        "Output_Image",
-        "Input_Image"
-    };
-    
-    private JulipTrackBar kernelTB;    
-    private JulipComboBox morphCB;
-    private JulipComboBox kernelCB;
-    private JulipComboBox imageCB;
+    private JLabel imgLabel;
     private JScrollPane imgSP;              // JScrollPane to hold image
     private int frameHeightMinusImage = 0;
     
-    private final int morphIdxDefault     = 0;
-    private final int kernelIdxDefault    = 0;
-    private final int kernelRadiusDefault = 0;
-    private final int imageIdxDefault     = 0;    
+    private final int colorSpaceIdxDefault = 0;
     //
     //------------------------------------------------
     
-    public LinkErodilate(String[] args) {
+    public LinkViewer(String[] args) {
     
         // Initialize fields:
-        codeFilename = "code_LinkErodilate.java";
+        codeFilename = "code_LinkViewer.java";
         // 
         //---------------------------------------------
         //
@@ -139,26 +96,51 @@ public class LinkErodilate extends LinkClass {
         // Containers specifically for this Link Gui instantiated
         //
 
-        morphCB  = new JulipComboBox(MORPH_STR, myLinkMap.get("MORPH_OPERATION"), this);        
-        kernelTB = new JulipTrackBar(0, 10, Integer.parseInt(myLinkMap.get("KERNEL_RADIUS")), 2, 1, this);
-        kernelCB = new JulipComboBox(KERNEL_STR, myLinkMap.get("KERNEL_TYPE"), this);    
-        imageCB  = new JulipComboBox(IMAGE_STR,  myLinkMap.get("IMAGE_TYPE"), this);
-
+        xpixelTB = new JulipTrackBar(0, matImgSrc.cols(), Integer.parseInt(myLinkMap.get("XPIXEL")), matImgSrc.cols()/5, -1, this);
+        ypixelTB = new JulipTrackBar(0, matImgSrc.rows(), Integer.parseInt(myLinkMap.get("YPIXEL")), matImgSrc.rows()/5, -1, this);
+        colorSpaceCB = new JulipComboBox(COLORSPACE_STR, myLinkMap.get("COLORSPACE_TYPE"), this);    
+        pixelValueLabels = new JLabel[8][8];
+        
         //
         // JPanel to hold:
-        //      morphology JComboBox
-        //      kernel JLabel + JSlider
-        //      kernel JComboBox
-        //      image  JComboBox
-        //
+        //      region-of-interest JPanel
+        //      array of pixel labels JPanel
         JPanel sliderPanel = new JPanel();
         sliderPanel.setLayout(new BoxLayout(sliderPanel, BoxLayout.PAGE_AXIS));
         
-        sliderPanel.add(morphCB.comboBox);
-        sliderPanel.add(kernelTB.slider);
-        sliderPanel.add(kernelTB.label);
-        sliderPanel.add(kernelCB.comboBox);
-        sliderPanel.add(imageCB.comboBox);
+        // JPanel to hold:
+        //      xpixel JLabel + JSlider
+        //      ypixel JLabel + JSlider
+        //      color space JComboBox
+//        JPanel roiP = new JPanel();
+//        roiP.setLayout(new BoxLayout(roiP, BoxLayout.PAGE_AXIS));
+        sliderPanel.add(xpixelTB.slider);
+        sliderPanel.add(xpixelTB.label);
+        sliderPanel.add(ypixelTB.slider);
+        sliderPanel.add(ypixelTB.label);
+        sliderPanel.add(colorSpaceCB.comboBox);
+        
+        // JPanel to hold:
+        //      array of pixel JlLabels
+        JPanel pixelP = new JPanel();
+        pixelP.setLayout(new GridLayout(8,8));
+        for (int y = 0; y < 8; y++) {
+            for (int x = 0; x < 8; x++) {
+                pixelValueLabels[x][y] = new JLabel(" . ");
+                if (x == 0) {
+                    pixelValueLabels[x][y].setPreferredSize(new Dimension(20, 20));
+                }
+                else {
+                    pixelValueLabels[x][y].setPreferredSize(new Dimension(95, 20));
+                }
+                pixelP.add(pixelValueLabels[x][y]);
+            }            
+        }
+//        JPanel userP = new JPanel();
+//        userP.add(roiP, BorderLayout.LINE_START);
+//        userP.add(pixelP, BorderLayout.LINE_END);
+        
+        sliderPanel.add(pixelP);
         
         //
         // All Link Gui's need to add the JPanel returned from
@@ -191,6 +173,40 @@ public class LinkErodilate extends LinkClass {
         //----------------------------------------------
     }
     
+    /**
+     * loadImage - Import Contour file and update Sliders
+     * @return boolean - True if successful parsing of Contour input file, else false
+     */
+    @Override
+    public boolean loadImage(String filename) {
+        //
+        // The absolute vale of the channels param indicates the 
+        // number of channels for the Mat.
+        //
+        matImgSrc = Imgcodecs.imread(filename);
+        System.out.println("loadimage:"+filename);
+        if (matImgSrc.empty()) {
+            System.out.println("No image file:" + filename);
+            matImgSrc = Mat.zeros(new Size(512, 512), CvType.CV_8U);
+            return false;
+        }
+        //
+        // Reconfigure the sliders to span the new image size
+        //
+        if ((xpixelTB != null) && (ypixelTB != null)) {
+            xpixelTB.setMaximum(matImgSrc.cols());
+            ypixelTB.setMaximum(matImgSrc.rows());
+
+            xpixelTB.setValue(0);
+            ypixelTB.setValue(0);
+        
+            xpixelTB.slider.setMajorTickSpacing(matImgSrc.cols()/5);
+            ypixelTB.slider.setMajorTickSpacing(matImgSrc.rows()/5);
+        }
+
+        return true;
+    }
+    
         
     //-----------------------------------------------------------------------------------
     //
@@ -210,14 +226,13 @@ public class LinkErodilate extends LinkClass {
      */
     public void buildMyLinkMap() {
         Map<String, String> defaultMap = new HashMap<String, String>() {{
-                put("TYPE", "ERODILATE");
+                put("TYPE", "VIEWER");
                 put("IMAGE_IN", "none");
                 put("IMAGE_OUT", "null.png");
-                put("LINK_FILE", "nolinkerodilate.txt");
-                put("MORPH_OPERATION", MORPH_STR[morphIdxDefault]);
-                put("KERNEL_RADIUS", Integer.toString(kernelRadiusDefault));
-                put("KERNEL_TYPE", KERNEL_STR[kernelIdxDefault]);
-                put("IMAGE_TYPE", IMAGE_STR[imageIdxDefault]);
+                put("LINK_FILE", "nolinkviewer.txt");
+                put("XPIXEL", "0");
+                put("YPIXEL", "0");
+                put("COLORSPACE_TYPE", COLORSPACE_STR[colorSpaceIdxDefault]);
             }};
         for (String key : defaultMap.keySet()) {
             if (!myLinkMap.containsKey(key)) {
@@ -234,14 +249,13 @@ public class LinkErodilate extends LinkClass {
         //
         // Check for format and range validity for all 1 track bars
         //                
-        intCheck("KERNEL_RADIUS", 0, 10, kernelRadiusDefault);
+        intCheck("XPIXEL", 0, Integer.MAX_VALUE, 0);
+        intCheck("YPIXEL", 0, Integer.MAX_VALUE, 0);
         
         //
-        // Check for format and range validity for all 3 combo boxes
+        // Check for format and range validity for all 1 combo boxes
         //        
-        comboCheck("MORPH_OPERATION", MORPH_STR, morphIdxDefault);
-        comboCheck("KERNEL_TYPE", KERNEL_STR, kernelIdxDefault);
-        comboCheck("IMAGE_TYPE", IMAGE_STR, imageIdxDefault);
+        comboCheck("COLORSPACE_TYPE", COLORSPACE_STR, colorSpaceIdxDefault);
     }
        
        
@@ -255,14 +269,13 @@ public class LinkErodilate extends LinkClass {
         BufferedWriter writer;
         try {
             writer = new BufferedWriter(new FileWriter(linkfilename));
-            writer.write("TYPE\tINRANGEHSV\n");
+            writer.write("TYPE\tVIEWER\n");
             writer.write("IMAGE_IN\t"        + textFieldImageIn.getText()  + "\n");
             writer.write("IMAGE_OUT\t"       + textFieldImageOut.getText() + "\n");
             writer.write("LINK_FILE\t"       + linkfilename + "\n");
-            writer.write("MORPH_OPERATION\t" + MORPH_STR[morphCB.index] + "\n");
-            writer.write("KERNEL_RADIUS\t"   + kernelTB.value + "\n");
-            writer.write("KERNEL_TYPE\t"     + KERNEL_STR[kernelCB.index] + "\n");
-            writer.write("IMAGE_TYPE\t"      + IMAGE_STR[imageCB.index] + "\n");
+            writer.write("XPIXEL\t"          + xpixelTB.value + "\n");
+            writer.write("YPIXEL\t"          + ypixelTB.value + "\n");
+            writer.write("COLOR_SPACE_TYPE\t"+ COLORSPACE_STR[colorSpaceCB.index] + "\n");
             writer.close();
         } catch (IOException e) {}
     }
@@ -280,10 +293,9 @@ public class LinkErodilate extends LinkClass {
      */
     @Override
     public void mapToSettings() {
-        morphCB.setValue(myLinkMap.get("MORPH_OPERATION"));
-        kernelTB.setValue(Integer.parseInt(myLinkMap.get("KERNEL_RADIUS")));
-        kernelCB.setValue(myLinkMap.get("KERNEL_TYPE"));
-        imageCB.setValue(myLinkMap.get("IMAGE_TYPE"));
+        xpixelTB.setValue(Integer.parseInt(myLinkMap.get("XPIXEL")));
+        ypixelTB.setValue(Integer.parseInt(myLinkMap.get("YPIXEL")));
+        colorSpaceCB.setValue(myLinkMap.get("COLORSPACE_TYPE"));
     }
     
     /**
@@ -292,7 +304,8 @@ public class LinkErodilate extends LinkClass {
      */    
     @Override
     public boolean refreshSettings() {
-        kernelTB.label.setText("Kernel Radius: " + kernelTB.value);
+        xpixelTB.label.setText("X Pixel: " + xpixelTB.value);
+        ypixelTB.label.setText("Y Pixel: " + ypixelTB.value);
         return true;
     }
     
@@ -301,23 +314,55 @@ public class LinkErodilate extends LinkClass {
      */
     public void refreshImage() {
         matImgDst = Mat.zeros(matImgSrc.rows(), matImgSrc.cols(), CvType.CV_8U);
-        Size kernelSize = new Size(
-                            2 * kernelTB.value + 1, // double - width
-                            2 * kernelTB.value + 1  // double - height
-                          );
-        Mat element = Imgproc.getStructuringElement(
-                        KERNEL_TYPE[kernelCB.index],  // int  - shape
-                        kernelSize                    // Size - ksize
-                      );
-        if (imageCB.index == 0) {
-            Imgproc.morphologyEx(
-                matImgSrc,                     // Mat - source
-                matImgDst,                     // Mat - destination
-                MORPH_TYPE[morphCB.index],     // int - operation
-                element                        // Mat - kernel
-            );
-        } else {
+        
+        if (colorSpaceCB.index == 1) {
+            Imgproc.cvtColor(matImgDst, matImgSrc, Imgproc.COLOR_BGR2HSV);
+        }
+        else {
             matImgSrc.copyTo(matImgDst);
+        }
+        
+        Imgproc.rectangle (
+            matImgDst,
+            new Point (xpixelTB.value-4, ypixelTB.value-4),
+            new Point (xpixelTB.value+4, ypixelTB.value+4),
+            new Scalar (255, 255, 255),
+            1
+        );
+        Imgproc.rectangle (
+            matImgDst,
+            new Point (xpixelTB.value-5, ypixelTB.value-5),
+            new Point (xpixelTB.value+5, ypixelTB.value+5),
+            new Scalar (0, 0, 0),
+            1
+        );
+        
+        byte[] pixel = new byte[3];
+        
+        // Update pixel value labels
+        for (int ix = 0; ix < 8; ix++) {
+            for (int iy = 0; iy < 8; iy++) {
+                int x = xpixelTB.value-4+ix;
+                int y = ypixelTB.value-4+iy;
+                if ((ix == 0) && (iy == 0)) {
+                    pixelValueLabels[ix][iy].setText("   ");
+                }
+                else if ((ix == 0) && (iy != 0)) {
+                    pixelValueLabels[ix][iy].setText(Integer.toString(y));
+                }
+                else if ((ix != 0) && (iy == 0)) {
+                    pixelValueLabels[ix][iy].setText(Integer.toString(x));
+                }
+                else if ((x < 0) || (y < 0) ||
+                    (x >= matImgSrc.cols()) ||
+                    (y >= matImgSrc.rows())) {
+                    pixelValueLabels[ix][iy].setText("-,-,-");
+                }
+                else { 
+                    matImgSrc.get(y, x, pixel);
+                    pixelValueLabels[ix][iy].setText(Integer.toString((int)(pixel[0]&0xff))+","+Integer.toString((int)(pixel[1]&0xff))+","+Integer.toString((int)(pixel[2]&0xff)));
+                }
+            }
         }
         
         Image img = HighGui.toBufferedImage(matImgDst);
@@ -347,33 +392,11 @@ public class LinkErodilate extends LinkClass {
     public String genCodeString(String reference) {
     
             StringBuilder sb = new StringBuilder();
-            sb.append("    public Mat doLinkErodilate");
+            sb.append("    public void doLinkViewer");
             if (!reference.equals("")) { sb.append("_"+reference); }
-            sb.append("(Mat matImgSrc) {\n");
+            sb.append("() {\n");
             
-            sb.append("        // Initialize output Mat to all zeros; and to same Size as input Mat\n");
-            sb.append("        Mat matImgDst = Mat.zeros(\n");
-            sb.append("            matImgSrc.rows(), // int - number of rows\n");
-            sb.append("            matImgSrc.cols(), // int - number of columns\n");
-            sb.append("            CvType.CV_8U      // int - Mat data type\n");
-            sb.append("        );\n");
-            sb.append("        // Create a kernel for morphologyEx operation\n");
-            sb.append("        Size kernelSize = new Size(\n");
-            sb.append("            "+(2 * kernelTB.value + 1)+", // double - width\n");
-            sb.append("            "+(2 * kernelTB.value + 1)+", // double - height\n");
-            sb.append("        );\n");
-            sb.append("        Mat element = Imgproc.getStructuringElement(\n");
-            sb.append("            "+KERNEL_TYPE_NAME[kernelCB.index]+",    // int  - shape\n");
-            sb.append("            kernelSize,             // Size - ksize\n");
-            sb.append("        );\n");
-            sb.append("        // Execute morphologyEx operation\n");
-            sb.append("        Imgproc.morphologyEx(\n");
-            sb.append("            matImgSrc,    // Mat - source\n");
-            sb.append("            matImgDst,    // Mat - destination\n");
-            sb.append("            "+MORPH_TYPE_NAME[morphCB.index]+",    // int - operation\n");
-            sb.append("            element       // Mat - kernel\n");
-            sb.append("        );\n");
-            sb.append("        return matImgDst;\n");
+            sb.append("        // Meh\n");
             sb.append("    }\n");
         return sb.toString();
     }    
@@ -397,7 +420,7 @@ public class LinkErodilate extends LinkClass {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new LinkErodilate(args);
+                new LinkViewer(args);
             }
         });        
     }

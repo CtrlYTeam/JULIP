@@ -42,6 +42,8 @@ public class LinkInRangeHHSV extends LinkClass {
     };
     
     private JLabel hueLabel;                // HSV Hue color bar of values ranging from 0-180
+    private JScrollPane imgSP;              // JScrollPane to hold image
+    private int frameHeightMinusImage = 0;
     
     private JulipTrackBar hue1MinTB;    
     private JulipTrackBar hue1MaxTB;    
@@ -102,7 +104,9 @@ public class LinkInRangeHHSV extends LinkClass {
         // All frames have a display image
         //
         Image img = HighGui.toBufferedImage(matImgSrc);
-        imgLabel = new JLabel(new ImageIcon(img));        
+        imgLabel = new JLabel(new ImageIcon(img));
+        imgSP = new JScrollPane(imgLabel);
+        imgSP.setPreferredSize(new Dimension(400,400));             
         //
         //----------------------------------------------
         //
@@ -163,14 +167,23 @@ public class LinkInRangeHHSV extends LinkClass {
         // Build frame; the imgLabel is required to be added somewhere to the frame
         frame.add(hueLabel, BorderLayout.PAGE_START);
         frame.add(sliderPanel, BorderLayout.CENTER);        
-        frame.add(imgLabel, BorderLayout.PAGE_END);
+        frame.add(imgSP, BorderLayout.PAGE_END);
 
+        frame.addComponentListener(new ComponentAdapter() {
+            public void componentResized(ComponentEvent componentEvent) {
+                Dimension sizeSP = imgSP.getSize();
+                imgSP.setPreferredSize(new Dimension(sizeSP.width, frame.getSize().height - frameHeightMinusImage));
+                hueLabel.setIcon(drawHueColorBar());                
+            }
+        });
+        
         //
         //----------------------------------------------
         //
         // These final commands are required for all Link Gui's
         //
         frame.pack();
+        frameHeightMinusImage = frame.getSize().height - imgSP.getSize().height;          
         frame.setVisible(true);
         refreshSettings();
         refreshImage();
@@ -400,7 +413,7 @@ public class LinkInRangeHHSV extends LinkClass {
         imgLabel.setIcon(new ImageIcon(img));
         // resize the Hue color bar according to size of shown image
         hueLabel.setIcon(drawHueColorBar());
-        frame.pack();
+//        frame.pack();
         frame.repaint();
     }
     

@@ -35,6 +35,8 @@ public class LinkInRangeHSV extends LinkClass {
     };
     
     private JLabel hueLabel;                // HSV Hue color bar of values ranging from 0-180
+    private JScrollPane imgSP;              // JScrollPane to hold image
+    private int frameHeightMinusImage = 0;
     
     private JulipTrackBar hueMinTB;    
     private JulipTrackBar hueMaxTB;    
@@ -51,6 +53,7 @@ public class LinkInRangeHSV extends LinkClass {
     private final int valMinDefault = 0;
     private final int valMaxDefault = 255;
     private final int imageIdxDefault = 0;    
+    
     //
     //------------------------------------------------
     
@@ -91,7 +94,9 @@ public class LinkInRangeHSV extends LinkClass {
         // All frames have a display image
         //
         Image img = HighGui.toBufferedImage(matImgSrc);
-        imgLabel = new JLabel(new ImageIcon(img));        
+        imgLabel = new JLabel(new ImageIcon(img));   
+        imgSP = new JScrollPane(imgLabel);
+        imgSP.setPreferredSize(new Dimension(400,400));
         //
         //----------------------------------------------
         //
@@ -144,7 +149,16 @@ public class LinkInRangeHSV extends LinkClass {
         // Build frame; the imgLabel is required to be added somewhere to the frame
         frame.add(hueLabel, BorderLayout.PAGE_START);
         frame.add(sliderPanel, BorderLayout.CENTER);        
-        frame.add(imgLabel, BorderLayout.PAGE_END);
+        frame.add(imgSP, BorderLayout.PAGE_END);
+        
+        frame.addComponentListener(new ComponentAdapter() {
+            public void componentResized(ComponentEvent componentEvent) {
+                Dimension sizeSP = imgSP.getSize();
+                imgSP.setPreferredSize(new Dimension(sizeSP.width, frame.getSize().height - frameHeightMinusImage));
+                hueLabel.setIcon(drawHueColorBar());
+            }
+        });
+        
 
         //
         //----------------------------------------------
@@ -152,6 +166,7 @@ public class LinkInRangeHSV extends LinkClass {
         // These final commands are required for all Link Gui's
         //
         frame.pack();
+        frameHeightMinusImage = frame.getSize().height - imgSP.getSize().height;
         frame.setVisible(true);
         refreshSettings();
         refreshImage();
@@ -173,7 +188,11 @@ public class LinkInRangeHSV extends LinkClass {
         // sliders and border edge.
         //
         double[] data = new double[3];
-        int hueCols = Math.max(matImgSrc.cols()-24, frame.getPreferredSize().width-36);
+        //int hueCols = Math.max(matImgSrc.cols()-24, frame.getPreferredSize().width-36);
+        int scrollPaneWidth = 0;
+        if (imgSP != null) { scrollPaneWidth = imgSP.getSize().width-24; }
+        int hueCols = Math.max(scrollPaneWidth, frame.getSize().width-36);
+        hueCols = Math.max(1, hueCols);
         int hueRows = 10;
         int x;
         int y;
@@ -353,8 +372,8 @@ public class LinkInRangeHSV extends LinkClass {
         Image img = HighGui.toBufferedImage(matImgDst);
         imgLabel.setIcon(new ImageIcon(img));
         // resize the Hue color bar according to size of shown image
-        hueLabel.setIcon(drawHueColorBar());
-        frame.pack();
+        hueLabel.setIcon(drawHueColorBar());        
+//        frame.pack();
         frame.repaint();
     }
     

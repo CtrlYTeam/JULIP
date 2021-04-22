@@ -39,6 +39,8 @@ public class LinkRelicPictograph extends LinkClass {
     private int pictographIndex;
         
     private JLabel labelImageIs;
+    private JScrollPane imgSP;              // JScrollPane to hold image
+    private int frameHeightMinusImage = 0;
     
     private List<Point> points;
     List<Double> xlist;
@@ -88,6 +90,8 @@ public class LinkRelicPictograph extends LinkClass {
         //
         Image img = HighGui.toBufferedImage(matImgSrc);
         imgLabel = new JLabel(new ImageIcon(img));        
+        imgSP = new JScrollPane(imgLabel);
+        imgSP.setPreferredSize(new Dimension(400,400));                
         //
         //----------------------------------------------
         //
@@ -107,7 +111,14 @@ public class LinkRelicPictograph extends LinkClass {
         
         // Build frame
         frame.add(sliderPanel, BorderLayout.PAGE_START);
-        frame.add(imgLabel, BorderLayout.CENTER);        
+        frame.add(imgSP, BorderLayout.CENTER);        
+        
+        frame.addComponentListener(new ComponentAdapter() {
+            public void componentResized(ComponentEvent componentEvent) {
+                Dimension sizeSP = imgSP.getSize();
+                imgSP.setPreferredSize(new Dimension(sizeSP.width, frame.getSize().height - frameHeightMinusImage));
+            }
+        });
         
         //
         //----------------------------------------------
@@ -116,6 +127,7 @@ public class LinkRelicPictograph extends LinkClass {
         //
         frame.pack();
         frame.setVisible(true);
+        frameHeightMinusImage = frame.getSize().height - imgSP.getSize().height; 
         refreshSettings();
         refreshImage();
         //
@@ -308,7 +320,7 @@ public class LinkRelicPictograph extends LinkClass {
         
         Image img = HighGui.toBufferedImage(matImgDst);
         imgLabel.setIcon(new ImageIcon(img));        
-        frame.pack();
+//        frame.pack();
         frame.repaint();
     }    
     

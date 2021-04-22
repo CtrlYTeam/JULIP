@@ -68,6 +68,8 @@ public class LinkFilterContours extends LinkClass {
     
     private JLabel imgLabel;
     private Point anchor;
+    private JScrollPane imgSP;              // JScrollPane to hold image
+    private int frameHeightMinusImage = 0;
     
     List<MatOfPoint> contours;    
     List<Double> contourAreas;
@@ -123,6 +125,8 @@ public class LinkFilterContours extends LinkClass {
         //
         Image img = HighGui.toBufferedImage(matImgSrc);
         imgLabel = new JLabel(new ImageIcon(img));        
+        imgSP = new JScrollPane(imgLabel);
+        imgSP.setPreferredSize(new Dimension(400,400));
         //
         //----------------------------------------------
         //
@@ -210,7 +214,14 @@ public class LinkFilterContours extends LinkClass {
                         
         // Build frame
         frame.add(sliderPanel, BorderLayout.PAGE_START);
-        frame.add(imgLabel, BorderLayout.CENTER);        
+        frame.add(imgSP, BorderLayout.PAGE_END);
+
+        frame.addComponentListener(new ComponentAdapter() {
+            public void componentResized(ComponentEvent componentEvent) {
+                Dimension sizeSP = imgSP.getSize();
+                imgSP.setPreferredSize(new Dimension(sizeSP.width, frame.getSize().height - frameHeightMinusImage));
+            }
+        });
         
         //
         //----------------------------------------------
@@ -218,6 +229,7 @@ public class LinkFilterContours extends LinkClass {
         // These final commands are required for all Link Gui's
         //
         frame.pack();
+        frameHeightMinusImage = frame.getSize().height - imgSP.getSize().height;        
         frame.setVisible(true);
         refreshSettings();
         refreshImage();

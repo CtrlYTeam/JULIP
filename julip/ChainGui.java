@@ -76,6 +76,8 @@ public class ChainGui {
     public  JFrame frame;
     private JPanel myPanel;
     private JLabel imgLabel;
+    private JScrollPane imgSP;              // JScrollPane to hold image
+    private int frameHeightMinusImage = 0;
     
     private Mat matImgSrc;
     private Image img;
@@ -143,6 +145,8 @@ public class ChainGui {
         // Create and set up the window.
         frame = new JFrame(getFrameName());
         imgLabel = new JLabel();        
+        imgSP = new JScrollPane(imgLabel);
+        imgSP.setPreferredSize(new Dimension(400,400));                
         myPanel = new JPanel();
         myPanel.setLayout(new BoxLayout(myPanel, BoxLayout.PAGE_AXIS));
 
@@ -355,7 +359,12 @@ public class ChainGui {
         chainControlPanel.add(exportCodeB);
         myPanel.add(chainControlPanel);
         
-        
+        frame.addComponentListener(new ComponentAdapter() {
+            public void componentResized(ComponentEvent componentEvent) {
+                Dimension sizeSP = imgSP.getSize();
+                imgSP.setPreferredSize(new Dimension(sizeSP.width, frame.getSize().height - frameHeightMinusImage));
+            }
+        });        
         
         // Get Image based on imgTable selection
         getImage();
@@ -363,12 +372,14 @@ public class ChainGui {
         // image selected in imageTable
         setOutputFileNames();
         frame.add(myPanel, BorderLayout.PAGE_START);
-        frame.add(imgLabel, BorderLayout.PAGE_END);
-        resizeFrame();
+        frame.add(imgSP, BorderLayout.PAGE_END);
+        frame.pack();
+        frameHeightMinusImage = frame.getSize().height - imgSP.getSize().height;
+//        resizeFrame();        
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);       
-        frame.setLocation(0,0);
+        frame.setLocation(0,0);         
         frame.setVisible(true);
-                
+        
         buildGuis();
     }
     
@@ -400,7 +411,7 @@ public class ChainGui {
                     // propogate the effect of a new image to the Link Gui's                    
                     getImage();
                     setOutputFileNames();
-                    resizeFrame();               
+                    //resizeFrame();               
                 }
             }
         });

@@ -63,6 +63,8 @@ public class MeshGui {
     private JFrame frame;
     private JPanel myPanel;
     private JLabel imgLabel;
+    private JScrollPane imgSP;              // JScrollPane to hold image
+    private int frameHeightMinusImage = 0;
     
     private Mat matImgSrc;
     private Image img;
@@ -119,6 +121,8 @@ public class MeshGui {
         // Create and set up the window.
         frame = new JFrame("MeshGui");
         imgLabel = new JLabel();        
+        imgSP = new JScrollPane(imgLabel);
+        imgSP.setPreferredSize(new Dimension(400,400));                
         myPanel = new JPanel();
         myPanel.setLayout(new BoxLayout(myPanel, BoxLayout.PAGE_AXIS));
 
@@ -169,7 +173,7 @@ public class MeshGui {
                     // If the initial image is changed, set up the chain window to 
                     // propogate the effect of a new image to the Link Gui's                    
                     getImage();
-                    resizeFrame();               
+//                    resizeFrame();               
                 }
             }
         });
@@ -489,8 +493,16 @@ public class MeshGui {
         getImage();
         
         frame.add(myPanel, BorderLayout.PAGE_START);
-        frame.add(imgLabel, BorderLayout.PAGE_END);
-        resizeFrame();
+        frame.add(imgSP, BorderLayout.PAGE_END);
+        frame.addComponentListener(new ComponentAdapter() {
+            public void componentResized(ComponentEvent componentEvent) {
+                Dimension sizeSP = imgSP.getSize();
+                imgSP.setPreferredSize(new Dimension(sizeSP.width, frame.getSize().height - frameHeightMinusImage));
+            }
+        });        
+        frame.pack();
+        frameHeightMinusImage = frame.getSize().height - imgSP.getSize().height;        
+//        resizeFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);       
         frame.setLocation(0,0);
         frame.setVisible(true);
