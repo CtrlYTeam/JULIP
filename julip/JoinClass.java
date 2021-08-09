@@ -101,9 +101,6 @@ public class JoinClass extends LinkClass {
                 System.out.println("    [-o <ImageOutputFileName>]");
                 System.out.println("    [-f <LinkFileName>]"); // default-only
                 System.out.println();
-                if (inputJoinStr.length > 0) {
-                    System.out.println(inputJoinStr);
-                }
                 System.exit(0);
             }
             if (arg.equals("-default")) {
@@ -241,6 +238,7 @@ public class JoinClass extends LinkClass {
      * @return boolean     - true if file is readable and correct format, else false
      */
     public boolean readJoinFile(String joinfilename) {
+        return true;
     }
     
     
@@ -309,7 +307,8 @@ public class JoinClass extends LinkClass {
      * buildJoinPanel - construct a JPanel of Containers that are common to all link guis
      *                  These Containers handle file reading/writing operations.
      */
-    public JPanel buildJoinPanel() {    
+    public JPanel buildJoinPanel() { 
+        return null;
     }
     
     //--------------------------------------------------------------------------------------
@@ -424,7 +423,7 @@ public class JoinClass extends LinkClass {
         exportCodeB.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                exportCode();
+                //exportCode();
             }
         });
         linkPanel.add(exportCodeB);

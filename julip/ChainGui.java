@@ -35,8 +35,10 @@ public class ChainGui {
     private List<String> linkGuisList;
     private String[] linkGuis = {      // List of all Link Gui classes available for this app.
                 "LinkInRangeHSV       img>img",
-                "LinkInRangeHHSV     img>img",
+                "LinkInRangeHHSV      img>img",
+                "LinkInRangeYCrCb     img>mat",
                 "LinkErodilate        img>img",
+                "LinkExtractChannel   img>img",
                 "LinkFindContours     img>ctr",
                 "LinkFilterContours   ctr>ctr",
                 "LinkGeometryContours ctr>ctr",
@@ -44,10 +46,12 @@ public class ChainGui {
                 "LinkContourStats     ctr>pts",
                 "JoinRelicJewel       ctr>nil",
                 "LinkRelicPictograph  pts>nil",
-                "LinkRoverMineral     ctr>nil"
+                "LinkRoverMineral     ctr>nil",
+                "LinkSkyStoneDetect   png>nil"
             };
     Map<String, String> extensions = new HashMap<String, String>() {{
         put("img", "png");
+        put("mat", "mat");
         put("ctr", "ctr");
         put("pts", "pts");
         put("nil", "txt");
@@ -1206,8 +1210,14 @@ public class ChainGui {
                 else if (guiName.equals("LinkInRangeHHSV")) {
                     gui = new LinkInRangeHHSV(args);
                 }
+                else if (guiName.equals("LinkInRangeYCrCb")) {
+                    gui = new LinkInRangeYCrCb(args);
+                }
                 else if (guiName.equals("LinkErodilate")) {
                     gui = new LinkErodilate(args);
+                }                
+                else if (guiName.equals("LinkExtractChannel")) {
+                    gui = new LinkExtractChannel(args);
                 }                
                 else if (guiName.equals("LinkFindContours")) {
                     gui = new LinkFindContours(args);
@@ -1232,6 +1242,9 @@ public class ChainGui {
                 }                
                 else if (guiName.equals("LinkRoverMineral")) {
                     gui = new LinkRoverMineral(args);
+                }
+                else if (guiName.equals("LinkSkyStoneDetect")) {
+                    gui = new LinkSkyStoneDetect(args);
                 }
                 else {
                     System.out.println("BuidGui: Failed to match to a Link Gui name:"+guiName);

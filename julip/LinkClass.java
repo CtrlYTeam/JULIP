@@ -629,18 +629,25 @@ public class LinkClass {
      * @return   - true if file successfully read, else false
      */
     public boolean loadImage(String filename) {
+        // split filename into base and extension
+        String[] tokens = filename.split("\\.(?=[^\\.]+$)");
+        if ((tokens.length > 1) && (tokens[1].equals("mat"))) {
+            matImgSrc = MatHandler.readMat(filename);
+        } else {
+            matImgSrc = Imgcodecs.imread(filename);
+        }
         //
         // The absolute vale of the channels param indicates the 
         // number of channels for the Mat.
-        //
-        matImgSrc = Imgcodecs.imread(filename);
+        //            
         if (matImgSrc.empty()) {
             System.out.println("No image file:" + filename);
             matImgSrc = Mat.zeros(new Size(512, 512), CvType.CV_8U);
             return false;
-        }
+        }        
         return true;
     }
+        
     //
     // end of Java container methods
     //-----------------------------------------------------------------------

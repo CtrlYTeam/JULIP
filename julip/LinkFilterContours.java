@@ -210,9 +210,13 @@ public class LinkFilterContours extends LinkClass {
         sliderPanel.add(labelContours);
         sliderPanel.add(labelDrawnContours);
         
+        //
+        // All Link Gui's need to add the JPanel returned from
+        // LinkClass buildLinkPanel() method.
+        //
         sliderPanel.add(buildLinkPanel());
                         
-        // Build frame
+        // Build frame; the imgLabel is required to be added somewhere to the frame
         frame.add(sliderPanel, BorderLayout.PAGE_START);
         frame.add(imgSP, BorderLayout.PAGE_END);
 
