@@ -29,6 +29,17 @@ public class JulipTrackBar {
     }
     
     /**
+     * setValueSilently - set a new value for JSlider without triggering changeListener
+     * @param val  value to set JSlider to
+     */
+    public void setValueSilently (int val) {
+        this.value = val;
+        this.suppressListener = true;
+        this.slider.setValue(val);
+        this.suppressListener = false;
+    }
+    
+    /**
      * setMaximum - change the maximum index of the JSlider.
      * @param max  new maximum index
      */

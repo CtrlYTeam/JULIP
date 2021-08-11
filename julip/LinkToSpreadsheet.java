@@ -25,7 +25,7 @@ import org.opencv.imgproc.Imgproc;
 /**
  * LinkErodilate - Graphical user interface to view pixel values.
  */
-public class LinkViewer extends LinkClass {
+public class LinkToSpreadsheet extends LinkClass {
 
     //------------------------------------------------
     // All fields here are specific to this Link Gui.
@@ -38,12 +38,16 @@ public class LinkViewer extends LinkClass {
         "Color Space: Gray"
     };
        
-    private JLabel[][] pixelValueLabels;
-    
-    private JulipTrackBar xpixelTB;
-    private JulipTrackBar ypixelTB;
-    private JulipTrackBar sizeTB;
+    private JulipTrackBar xminTB;
+    private JulipTrackBar xmaxTB;
+    private JulipTrackBar xposTB;
+    private JulipTrackBar yminTB;
+    private JulipTrackBar ymaxTB;
+    private JulipTrackBar yposTB;
     private JulipComboBox colorSpaceCB;
+    
+    private int wasXmin, wasXmax, wasXpos;
+    private int wasYmin, wasYmax, wasYpos;
     
     private Mat matPixel;
     
@@ -55,10 +59,10 @@ public class LinkViewer extends LinkClass {
     //
     //------------------------------------------------
     
-    public LinkViewer(String[] args) {
+    public LinkToSpreadsheet(String[] args) {
     
         // Initialize fields:
-        codeFilename = "code_LinkViewer.java";
+        codeFilename = "code_LinkToSpreadsheet.java";
         // 
         //---------------------------------------------
         //
@@ -76,7 +80,7 @@ public class LinkViewer extends LinkClass {
         // Load input file - could be an image, a Julip file of contours
         //                   or points, or a user-customized file.
         //
-        loadImage(myLinkMap.get("IMAGE_IN"));
+        boolean firstLoadOK = loadImage(myLinkMap.get("IMAGE_IN"));
         //
         // Error-check and correct invalid settings.
         //
@@ -101,11 +105,24 @@ public class LinkViewer extends LinkClass {
         // Containers specifically for this Link Gui instantiated
         //
 
-        xpixelTB = new JulipTrackBar(0, matImgSrc.cols(), Integer.parseInt(myLinkMap.get("XPIXEL")), matImgSrc.cols()/5, -1, this);
-        ypixelTB = new JulipTrackBar(0, matImgSrc.rows(), Integer.parseInt(myLinkMap.get("YPIXEL")), matImgSrc.rows()/5, -1, this);
-        sizeTB   = new JulipTrackBar(1, 7, 4, 1, 1, this);
+        int cols = 5*((int)Math.ceil((float)matImgSrc.cols()/5.0f));
+        int rows = 5*((int)Math.ceil((float)matImgSrc.rows()/5.0f));
+        if (firstLoadOK) {
+            xminTB = new JulipTrackBar(0, cols, Integer.parseInt(myLinkMap.get("XMIN")), cols/5, -1, this);
+            xmaxTB = new JulipTrackBar(0, cols, Integer.parseInt(myLinkMap.get("XMAX")), cols/5, -1, this);
+            xposTB = new JulipTrackBar(0, cols, Integer.parseInt(myLinkMap.get("XPOS")), cols/5, -1, this);
+            yminTB = new JulipTrackBar(0, rows, Integer.parseInt(myLinkMap.get("YMIN")), rows/5, -1, this);
+            ymaxTB = new JulipTrackBar(0, rows, Integer.parseInt(myLinkMap.get("YMAX")), rows/5, -1, this);
+            yposTB = new JulipTrackBar(0, rows, Integer.parseInt(myLinkMap.get("YPOS")), rows/5, -1, this);
+        } else {
+            xminTB = new JulipTrackBar(0, cols, 0,                cols/5, -1, this);
+            xmaxTB = new JulipTrackBar(0, cols, matImgSrc.cols(), cols/5, -1, this);
+            xposTB = new JulipTrackBar(0, cols, 0,                cols/5, -1, this);
+            yminTB = new JulipTrackBar(0, rows, 0,                rows/5, -1, this);
+            ymaxTB = new JulipTrackBar(0, rows, matImgSrc.rows(), rows/5, -1, this);
+            yposTB = new JulipTrackBar(0, rows, 0,                rows/5, -1, this);
+        }
         colorSpaceCB = new JulipComboBox(COLORSPACE_STR, myLinkMap.get("COLORSPACE_TYPE"), this);    
-        pixelValueLabels = new JLabel[8][8];
         
         //
         // JPanel to hold:
@@ -115,42 +132,31 @@ public class LinkViewer extends LinkClass {
         sliderPanel.setLayout(new BoxLayout(sliderPanel, BoxLayout.PAGE_AXIS));
         
         // JPanel to hold:
-        //      xpixel JLabel + JSlider
-        //      ypixel JLabel + JSlider
-        //      size   JLabel + JSlider
+        //      xmin   JLabel + JSlider
+        //      xmax   JLabel + JSlider
+        //      xpos   JLabel + JSlider
+        //      ymin   JLabel + JSlider
+        //      ymax   JLabel + JSlider
+        //      ypos   JLabel + JSlider
         //      color space JComboBox
-//        JPanel roiP = new JPanel();
-//        roiP.setLayout(new BoxLayout(roiP, BoxLayout.PAGE_AXIS));
-        sliderPanel.add(xpixelTB.slider);
-        sliderPanel.add(xpixelTB.label);
-        sliderPanel.add(ypixelTB.slider);
-        sliderPanel.add(ypixelTB.label);
-//        sliderPanel.add(sizeTB.slider);
-//        sliderPanel.add(sizeTB.label);
+        sliderPanel.add(xminTB.slider);
+        sliderPanel.add(xminTB.label);
+        sliderPanel.add(xmaxTB.slider);
+        sliderPanel.add(xmaxTB.label);
+        sliderPanel.add(xposTB.slider);
+        sliderPanel.add(xposTB.label);
+        sliderPanel.add(new JLabel("  "));
+        sliderPanel.add(new JLabel("  "));
+        sliderPanel.add(yminTB.slider);
+        sliderPanel.add(yminTB.label);
+        sliderPanel.add(ymaxTB.slider);
+        sliderPanel.add(ymaxTB.label);
+        sliderPanel.add(yposTB.slider);
+        sliderPanel.add(yposTB.label);
+        sliderPanel.add(new JLabel("  "));
+        sliderPanel.add(new JLabel("  "));
         sliderPanel.add(colorSpaceCB.comboBox);
-        
-        // JPanel to hold:
-        //      array of pixel JlLabels
-        JPanel pixelP = new JPanel();
-        pixelP.setLayout(new GridLayout(8,8));
-        for (int y = 0; y < 8; y++) {
-            for (int x = 0; x < 8; x++) {
-                pixelValueLabels[x][y] = new JLabel(" . ");
-                if (x == 0) {
-                    pixelValueLabels[x][y].setPreferredSize(new Dimension(20, 20));
-                }
-                else {
-                    pixelValueLabels[x][y].setPreferredSize(new Dimension(95, 20));
-                }
-                pixelP.add(pixelValueLabels[x][y]);
-            }            
-        }
-//        JPanel userP = new JPanel();
-//        userP.add(roiP, BorderLayout.LINE_START);
-//        userP.add(pixelP, BorderLayout.LINE_END);
-        
-        sliderPanel.add(pixelP);
-        
+                
         //
         // All Link Gui's need to add the JPanel returned from
         // LinkClass buildLinkPanel() method.
@@ -188,6 +194,7 @@ public class LinkViewer extends LinkClass {
      */
     @Override
     public boolean loadImage(String filename) {
+    
         //
         // The absolute vale of the channels param indicates the 
         // number of channels for the Mat.
@@ -196,21 +203,36 @@ public class LinkViewer extends LinkClass {
         System.out.println("loadimage:"+filename);
         if (matImgSrc.empty()) {
             System.out.println("No image file:" + filename);
-            matImgSrc = Mat.zeros(new Size(512, 512), CvType.CV_8U);
+            matImgSrc = Mat.zeros(new Size(512, 512), CvType.CV_8UC3);
             return false;
         }
         //
         // Reconfigure the sliders to span the new image size
         //
-        if ((xpixelTB != null) && (ypixelTB != null)) {
-            xpixelTB.setMaximum(matImgSrc.cols());
-            ypixelTB.setMaximum(matImgSrc.rows());
+        if ((xminTB != null) && (yminTB != null)) {
+            xminTB.setMaximum(matImgSrc.cols());
+            xmaxTB.setMaximum(matImgSrc.cols());
+            xposTB.setMaximum(matImgSrc.cols());
+            yminTB.setMaximum(matImgSrc.rows());
+            ymaxTB.setMaximum(matImgSrc.rows());
+            yposTB.setMaximum(matImgSrc.rows());
 
-            xpixelTB.setValue(0);
-            ypixelTB.setValue(0);
+            xminTB.setValue(0);
+            xmaxTB.setValue(matImgSrc.cols());
+            xposTB.setValue(0);
+            yminTB.setValue(0);
+            ymaxTB.setValue(matImgSrc.rows());
+            yposTB.setValue(0);
         
-            xpixelTB.slider.setMajorTickSpacing(matImgSrc.cols()/5);
-            ypixelTB.slider.setMajorTickSpacing(matImgSrc.rows()/5);
+            int cols = 5*((int)Math.ceil((float)matImgSrc.cols()/5.0f));
+            int rows = 5*((int)Math.ceil((float)matImgSrc.rows()/5.0f));
+        
+            xminTB.slider.setMajorTickSpacing(cols/5);
+            xmaxTB.slider.setMajorTickSpacing(cols/5);
+            xposTB.slider.setMajorTickSpacing(cols/5);
+            yminTB.slider.setMajorTickSpacing(rows/5);
+            ymaxTB.slider.setMajorTickSpacing(rows/5);
+            yposTB.slider.setMajorTickSpacing(rows/5);
         }
 
         return true;
@@ -237,10 +259,14 @@ public class LinkViewer extends LinkClass {
         Map<String, String> defaultMap = new HashMap<String, String>() {{
                 put("TYPE", "VIEWER");
                 put("IMAGE_IN", "none");
-                put("IMAGE_OUT", "null.png");
-                put("LINK_FILE", "nolinkviewer.txt");
-                put("XPIXEL", "0");
-                put("YPIXEL", "0");
+                put("IMAGE_OUT", "null.csv");
+                put("LINK_FILE", "nolinktospreadsheet.txt");
+                put("XMIN", "0");
+                put("XMAX", "0");
+                put("XPOS", "0");
+                put("YMIN", "0");
+                put("YMAX", "0");
+                put("YPOS", "0");
                 put("COLORSPACE_TYPE", COLORSPACE_STR[colorSpaceIdxDefault]);
             }};
         for (String key : defaultMap.keySet()) {
@@ -258,8 +284,12 @@ public class LinkViewer extends LinkClass {
         //
         // Check for format and range validity for all 1 track bars
         //                
-        intCheck("XPIXEL", 0, Integer.MAX_VALUE, 0);
-        intCheck("YPIXEL", 0, Integer.MAX_VALUE, 0);
+        intCheck("XMIN", 0, Integer.MAX_VALUE, 0);
+        intCheck("XMAX", 0, Integer.MAX_VALUE, 0);
+        intCheck("XPOS", 0, Integer.MAX_VALUE, 0);
+        intCheck("YMIN", 0, Integer.MAX_VALUE, 0);
+        intCheck("YMAX", 0, Integer.MAX_VALUE, 0);
+        intCheck("YPOS", 0, Integer.MAX_VALUE, 0);
         
         //
         // Check for format and range validity for all 1 combo boxes
@@ -282,8 +312,12 @@ public class LinkViewer extends LinkClass {
             writer.write("IMAGE_IN\t"        + textFieldImageIn.getText()  + "\n");
             writer.write("IMAGE_OUT\t"       + textFieldImageOut.getText() + "\n");
             writer.write("LINK_FILE\t"       + linkfilename + "\n");
-            writer.write("XPIXEL\t"          + xpixelTB.value + "\n");
-            writer.write("YPIXEL\t"          + ypixelTB.value + "\n");
+            writer.write("XMIN\t"            + xminTB.value + "\n");
+            writer.write("XMAX\t"            + xmaxTB.value + "\n");
+            writer.write("XPOS\t"            + xposTB.value + "\n");
+            writer.write("YMIN\t"            + yminTB.value + "\n");
+            writer.write("YMAX\t"            + ymaxTB.value + "\n");
+            writer.write("YPOS\t"            + yposTB.value + "\n");
             writer.write("COLOR_SPACE_TYPE\t"+ COLORSPACE_STR[colorSpaceCB.index] + "\n");
             writer.close();
         } catch (IOException e) {}
@@ -294,7 +328,22 @@ public class LinkViewer extends LinkClass {
      */
     @Override
     public void saveImage() {
-        Imgcodecs.imwrite(textFieldImageOut.getText(), matImgDst);
+System.out.println(yminTB.value);    
+System.out.println(ymaxTB.value);    
+System.out.println(xminTB.value);    
+System.out.println(xmaxTB.value);    
+        Mat outMat = matPixel.submat(
+            yminTB.value,   // int rowStart
+            ymaxTB.value,   // int rowEnd
+            xminTB.value,   // int colStart
+            xmaxTB.value    // int colEnd
+        );
+        MatHandler.writeMatToCSV(
+            outMat,                      // Mat mat
+            xminTB.value,                // int colOffset
+            yminTB.value,                // int rowOffset
+            textFieldImageOut.getText()  // String filename
+        );
     }
     
     /**
@@ -302,8 +351,12 @@ public class LinkViewer extends LinkClass {
      */
     @Override
     public void mapToSettings() {
-        xpixelTB.setValue(Integer.parseInt(myLinkMap.get("XPIXEL")));
-        ypixelTB.setValue(Integer.parseInt(myLinkMap.get("YPIXEL")));
+        xminTB.setValue(Integer.parseInt(myLinkMap.get("XMIN")));
+        xmaxTB.setValue(Integer.parseInt(myLinkMap.get("XMAX")));
+        xposTB.setValue(Integer.parseInt(myLinkMap.get("XPOS")));
+        yminTB.setValue(Integer.parseInt(myLinkMap.get("YMIN")));
+        ymaxTB.setValue(Integer.parseInt(myLinkMap.get("YMAX")));
+        yposTB.setValue(Integer.parseInt(myLinkMap.get("YPOS")));
         colorSpaceCB.setValue(myLinkMap.get("COLORSPACE_TYPE"));
     }
     
@@ -313,9 +366,55 @@ public class LinkViewer extends LinkClass {
      */    
     @Override
     public boolean refreshSettings() {
-        xpixelTB.label.setText("X Pixel: " + xpixelTB.value);
-        ypixelTB.label.setText("Y Pixel: " + ypixelTB.value);
-        sizeTB.label.setText("Region Radius");
+    
+        if (xminTB.value != wasXmin) {
+            if (xminTB.value > xmaxTB.value) {
+                xmaxTB.setValueSilently(xminTB.value);
+            }
+            xposTB.setValueSilently(xminTB.value);
+        }        
+        else if (xmaxTB.value != wasXmax) {
+            if (xmaxTB.value < xminTB.value) {
+                xminTB.setValueSilently(xmaxTB.value);
+                xposTB.setValueSilently(xmaxTB.value);
+            }
+        }
+        else if (xposTB.value != wasXpos) {
+            xmaxTB.setValueSilently(Math.min(xposTB.value + xmaxTB.value - xminTB.value, xmaxTB.slider.getMaximum()));
+            xminTB.setValueSilently(xposTB.value);
+        }
+        
+        if (yminTB.value != wasYmin) {
+            if (yminTB.value > ymaxTB.value) {
+                ymaxTB.setValueSilently(yminTB.value);
+             }
+             yposTB.setValueSilently(yminTB.value);
+        }        
+        else if (ymaxTB.value != wasYmax) {
+            if (ymaxTB.value < yminTB.value) {
+                yminTB.setValueSilently(ymaxTB.value);
+                yposTB.setValueSilently(ymaxTB.value);
+            }
+        }
+        else if (yposTB.value != wasYpos) {
+            ymaxTB.setValueSilently(Math.min(yposTB.value + ymaxTB.value - yminTB.value, ymaxTB.slider.getMaximum()));
+            yminTB.setValueSilently(yposTB.value);
+        }
+        
+        xminTB.label.setText("X Min: " + xminTB.value);
+        xmaxTB.label.setText("X Max: " + xmaxTB.value);
+        xposTB.label.setText("X Pos: " + xposTB.value);
+        yminTB.label.setText("Y Min: " + xminTB.value);
+        ymaxTB.label.setText("Y Max: " + xmaxTB.value);
+        yposTB.label.setText("Y Pos: " + xposTB.value);
+        
+        wasXmin = xminTB.value;
+        wasXmax = xmaxTB.value;
+        wasXpos = xposTB.value;
+        wasYmin = yminTB.value;
+        wasYmax = ymaxTB.value;
+        wasYpos = yposTB.value;
+        
         return true;
     }
     
@@ -352,49 +451,19 @@ public class LinkViewer extends LinkClass {
         
         Imgproc.rectangle (
             matImgDst,
-            new Point (xpixelTB.value-4, ypixelTB.value-4),
-            new Point (xpixelTB.value+4, ypixelTB.value+4),
+            new Point (xminTB.value, yminTB.value),
+            new Point (xmaxTB.value, ymaxTB.value),
             new Scalar (255, 255, 255),
             1
         );
         Imgproc.rectangle (
             matImgDst,
-            new Point (xpixelTB.value-5, ypixelTB.value-5),
-            new Point (xpixelTB.value+5, ypixelTB.value+5),
+            new Point (xminTB.value-1, yminTB.value-1),
+            new Point (xmaxTB.value+1, ymaxTB.value+1),
             new Scalar (0, 0, 0),
             1
         );
-        
-        byte[] pixel = new byte[3];
-        
-//        int length = sizeTB.value * 2 - 1;
-        
-        // Update pixel value labels
-        for (int ix = 0; ix < 8; ix++) {
-            for (int iy = 0; iy < 8; iy++) {
-                int x = xpixelTB.value-4+ix;
-                int y = ypixelTB.value-4+iy;
-                if ((ix == 0) && (iy == 0)) {
-                    pixelValueLabels[ix][iy].setText("   ");
-                }
-                else if ((ix == 0) && (iy != 0)) {
-                    pixelValueLabels[ix][iy].setText(Integer.toString(y));
-                }
-                else if ((ix != 0) && (iy == 0)) {
-                    pixelValueLabels[ix][iy].setText(Integer.toString(x));
-                }
-                else if ((x < 0) || (y < 0) ||
-                    (x >= matImgSrc.cols()) ||
-                    (y >= matImgSrc.rows())) {
-                    pixelValueLabels[ix][iy].setText("-,-,-");
-                }
-                else { 
-                    matPixel.get(y, x, pixel);
-                    pixelValueLabels[ix][iy].setText(Integer.toString((int)(pixel[0]&0xff))+","+Integer.toString((int)(pixel[1]&0xff))+","+Integer.toString((int)(pixel[2]&0xff)));
-                }
-            }
-        }
-        
+                
         Image img = HighGui.toBufferedImage(matImgDst);
         imgLabel.setIcon(new ImageIcon(img));
 //        frame.pack();
@@ -407,11 +476,6 @@ public class LinkViewer extends LinkClass {
     @Override
     public List<String> genImportList() {
         List<String> importsL = new ArrayList<String>();
-        importsL.add("org.opencv.core.Core");
-        importsL.add("org.opencv.core.CvType");
-        importsL.add("org.opencv.core.Mat");
-        importsL.add("org.opencv.core.Size");
-        importsL.add("org.opencv.imgproc.Imgproc");
         return importsL;
     }     
     
@@ -450,7 +514,7 @@ public class LinkViewer extends LinkClass {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new LinkViewer(args);
+                new LinkToSpreadsheet(args);
             }
         });        
     }

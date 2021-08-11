@@ -122,4 +122,52 @@ public class MatHandler {
         return mat;
     }
     
+    // use row, column offsets set to 0
+    public static void writeMatToCSV(Mat mat, String filename) {
+        writeMatToCSV(mat, 0, 0, filename);
+    }
+    
+    /**
+     * writeMatToCSV - customized Mat output to file without using Imgcodecs methods
+     * @param mat      - Mat to write to file
+     * @param filename - name of text file to write to
+     */
+    public static void writeMatToCSV(Mat mat, int colOffset, int rowOffset, String filename) {
+
+        int c = 0;
+        int r = 0;
+        double[] data;
+    
+        BufferedWriter writer;
+        try {
+            for (int channel = 0; channel < mat.channels(); channel++) {
+                writer = new BufferedWriter(new FileWriter(filename+"_"+channel));
+            
+                // write column numbers on first line
+                StringBuilder line = new StringBuilder("\t");
+                for (c = 0; c < mat.cols()-1; c++) {
+                    line.append(c+colOffset).append("\t");
+                }
+                line.append(c+colOffset).append("\n");
+                writer.write(line.toString());
+                            
+                for (r = 0; r < mat.rows(); r++) {
+                    // prepend row number
+                    line = new StringBuilder("");
+                    line.append(r+rowOffset).append("\t");
+                    
+                    for (c = 0; c < mat.cols()-1; c++) {
+                        data = mat.get(r,c);
+                        line.append((int) data[channel]).append("\t");
+                    }
+                    data = mat.get(r,c);
+                    line.append((int) data[channel]).append("\n");
+                    writer.write(line.toString());
+                }
+                writer.close();
+            }
+        } catch (IOException e) {}
+    }
+    
+    
 }
