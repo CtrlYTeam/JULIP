@@ -15,6 +15,7 @@ import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.table.*;
 
+import nu.pattern.OpenCV;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -1456,7 +1457,10 @@ public class ChainGui {
      */
     public static void main(String[] args) {
         // Load the native OpenCV library
-        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+        //If you are using gradle to run julip, uncomment the following line
+        OpenCV.loadShared();
+        //If you are running Julip directly, from commandline via the java command, uncomment the following line, and comment the above line
+        //System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
         // Schedule a job for the event dispatch thread:
         // creating and showing this application's GUI.
