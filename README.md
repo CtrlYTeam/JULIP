@@ -15,8 +15,17 @@ Running the application from Gradle is the preferred method.
 3. Navigate to `julip -> Tasks -> application -> run`
 4. Double click on `run`
 
-### From the command line
+### From the command line on Linux or Mac
 
 1. Navigate to the root of the project
 2. Run `./gradlew run`
 3. The application should start
+
+### From the command line on Windows
+
+1. Navigate to the root of the project
+2. Run `gradlew run`
+3. The application should start
+
+> Note: The first time you run the application, Gradle will download all the dependencies and build the project. This may take a few minutes.
+> Subsequent runs will be faster.
